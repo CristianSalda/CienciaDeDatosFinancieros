@@ -1,3 +1,4 @@
+
 import os
 import json
 import numpy as np
@@ -8,7 +9,7 @@ import plotly.express as px
 import plotly.subplots as sp
 import yfinance as yf
 import pandas as pd
-from simulacion import MonteCarloVaR
+from simulacion  import MonteCarloVaR, LiquidezDashboard, generar_figuras_acciones, acciones
 from arch import arch_model
 from sklearn.linear_model import LinearRegression
 
@@ -25,6 +26,26 @@ nombres_tickers = {
     "2628.HK": "China Life Insurance",
     "1339.HK": "PICC"
 }
+activos = {
+    2021: [35171383, 9426571, 9044493, 26722408, 8209922, 1150597578, 693361165, 9407436, 583041, 583041],
+    2022: [39609657, 11738804, 10381540, 28913857, 8799870, 1161893430, 734930669, 10300648, 705612, 476973],
+    2023: [44228754, 12279352, 11019147, 32432166, 9474925, 1303282403, 734930669, 11197809, 590782, 682254],
+    2024: [46846955, 12534983, 6414949, 35061299, 10147167, 1475309657, 845529299, 11882351, 586644, 661467]
+}
+
+pasivos = {
+    2021: [31896125, 8674042, 8344212, 24371855, 7574297, 913534448, 573473363, 5789344, 476973, 589253],
+    2022: [36095831, 10765161, 9288539, 26346286, 7597741, 937837126, 630808944, 9961870, 556724, 461687],
+    2023: [40920491, 11557658, 10235394, 29675351, 8632568, 1043429479, 630808944, 10354505, 395666, 495755],
+    2024: [44834480, 12143240, 6414949, 32108335, 9496026, 1297892359, 756255590, 10630958, 321492, 486031]
+}
+
+# Instanciar la clase LiquidezDashboard
+liquidez_dashboard = LiquidezDashboard(nombres_tickers, activos, pasivos)
+
+figuras_acciones, precios_opciones = generar_figuras_acciones(acciones)
+nombres_acciones = [accion["nombre"] for accion in acciones]
+
 
 # --- Parte 1: Ratios ---
 class DataDownloader:
@@ -227,7 +248,27 @@ for ticker in nombres_tickers.keys():
 app = Dash("Proyecto Final")
 
 app.layout = html.Div([
-    html.H1("Dashboard Financiero - Ratios de Estructura de Capital", style={'textAlign': 'center'}),
+    html.H1("Dashboard Financiero del Sector en Hong Kong", style={'textAlign': 'center'}),
+    html.H2("Volatilidad estimada por modelo GARCH", style={'textAlign': 'center'}),
+    dcc.Graph(id='grafico-garch'),
+
+    html.H2("Simulación de Opciones con el Modelo de Heston",style={'textAlign': 'center'}),
+    
+    html.Label("Selecciona una acción:"),
+    dcc.Dropdown(
+        id='dropdown-accion',
+        options=[{'label': nombre, 'value': nombre} for nombre in nombres_acciones],
+        value=nombres_acciones[0]
+    ),
+    
+    dcc.Graph(id='grafico-heston'),
+
+    html.H3("Precios de las Opciones Calculadas"),
+    html.Ul([
+        html.Li(f"{item['Acción']}: Precio de la opción = {item['Precio Opción']}")
+        for item in precios_opciones
+    ]),
+    html.H2("Ratios de Estructura de Capital", style={'textAlign': 'center'}),
 
     html.Div([
         html.Label("Selecciona un ratio:"),
@@ -239,17 +280,14 @@ app.layout = html.Div([
         )
     ], style={'padding': '20px'}),
 
-    dcc.Graph(id='grafico-barras'),
-
-    html.H2("Volatilidad estimada por modelo GARCH", style={'textAlign': 'center', 'marginTop': '40px'}),
-    dcc.Graph(id='grafico-garch'),  
+    dcc.Graph(id='grafico-barras'),  
 
     html.H2("Evolución de ratios de estructura de capital (4 años)", style={'textAlign': 'center'}),
     dcc.Graph(id='grafico-subplots', figure=GraphGenerator.generar_subplots(df_riesgo_capital)),
 
-    html.Hr(),
+    #html.Hr(),
 
-    html.H1("Simulación Monte Carlo y VaR - Sector Financiero Chino"),
+    html.H2("Simulación Monte Carlo y VaR", style={'textAlign': 'center'}),
 
     html.Label("Selecciona una institución financiera (simulada):"),
     dcc.Dropdown(
@@ -258,16 +296,24 @@ app.layout = html.Div([
         value=list(simulation_data.keys())[0],
         style={'width': '60%'}
     ),
-
     html.Div(id='stats-output', style={'fontSize': 18, 'marginBottom': 20}),
     dcc.Graph(id='var-histogram'),
     html.Div(id='metricas-individuales', style={'fontSize': 18, 'marginTop': 40, 'marginBottom': 40}),
+    html.H2("Liquidez de Empresas Financieras", style={'textAlign': 'center'}),
+    
+    dcc.Graph(
+        id="grafico-razon-corriente",
+        figure=liquidez_dashboard.generar_grafico()  
+    ),
+
     dcc.Graph(
         id='price-chart',
         figure={
             'data': [go.Scatter(x=closing_prices.index, y=closing_prices[ticker],
                                 mode='lines', name=ticker) for ticker in nombres_tickers.keys()],
-            'layout': go.Layout(title='Precio de Cierre', xaxis_title='Fecha', yaxis_title='Precio')
+            'layout': go.Layout(title=dict
+                (text='Precio de Cierre', font=dict(family='Arial Black', size=24),x=0.5
+            ), xaxis_title='Fecha', yaxis_title='Precio')
         }
     ),
 
@@ -303,7 +349,7 @@ app.layout = html.Div([
         }
     )
 ])
-
+    
 
 # Callbacks
 # Callback para mostrar el gráfico GARCH
@@ -379,6 +425,15 @@ def update_var_graph(bank_name):
     
     return fig, stats_text, lista
 
+@app.callback(
+    Output('grafico-heston', 'figure'),
+    Input('dropdown-accion', 'value')
+)
+def actualizar_grafico_henon(accion_seleccionada):
+    for nombre, fig in figuras_acciones:
+        if nombre == accion_seleccionada:
+            return fig
+    return {}
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))  # Railway asignará un puerto
