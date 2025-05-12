@@ -3,6 +3,12 @@ import numpy as np
 import json
 import datetime
 import os
+import pandas as pd
+import matplotlib.pyplot as plt
+from plotly.subplots import make_subplots
+import plotly.graph_objs as go
+import plotly.express as px
+from sklearn.linear_model import LinearRegression
 
 class StockpriceSimulator:
     def __init__(self, initial_price, mu, sigma, dt, steps):
@@ -24,6 +30,13 @@ class StockpriceSimulator:
 
         if np.any(np.isnan(self.prices)) or len(self.prices) < 2:
             print("Error: precios simulados inválidos", self.prices)
+
+    def plot_prices(self):
+        plt.plot(self.prices)
+        plt.title('Simulación de Precios de Acción')
+        plt.xlabel('Tiempo')
+        plt.ylabel('Precio')
+        plt.show()
 
 class VaRCalculator:
     def __init__(self, prices):
