@@ -6,3 +6,4 @@ yfinance
 arch
 scikit-learn
 Flask
+matplotlib
