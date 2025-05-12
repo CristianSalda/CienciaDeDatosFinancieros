@@ -381,4 +381,5 @@ def update_var_graph(bank_name):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Railway asignará un puerto
+    app.run(host="0.0.0.0", port=port) 
