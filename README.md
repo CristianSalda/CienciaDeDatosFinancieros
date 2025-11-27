@@ -11,6 +11,7 @@ La información recolectada se obtuvo principalmente de yahoo finance (bolsa de 
 Finalmente como conclusión se obtiene que: 
 
 -Es mejor invertir en una acción la cual venga creciendo en activos, gran volatibilidad, un precio de la acciónestable, (es decir no hayan grandes cambios), que sea una acción concurrida en el mercado. Por ultimo con proyección positiva.
--China Life Insurance; Alta volatibilidad, precio estable, aunque poco crecimiento en activos. (caída 2022).
--CITIC Securities: Acción estable en crecimiento, aunque es lento pero progresivo.
--Haitong Securities: Acción en un gran crecimiento aunque con pocas transacciones de la acción
+
+China Life Insurance; Alta volatibilidad, precio estable, aunque poco crecimiento en activos. (caída 2022).
+CITIC Securities: Acción estable en crecimiento, aunque es lento pero progresivo.
+Haitong Securities: Acción en un gran crecimiento aunque con pocas transacciones de la acción
